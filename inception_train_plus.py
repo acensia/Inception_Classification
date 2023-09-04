@@ -19,7 +19,7 @@ import time
 # Check for GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Device is ', device)
-os.makedirs("./pth", exist_ok=True)
+os.makedirs("./pth_added", exist_ok=True)
  
 
 # Data preparation
@@ -42,7 +42,7 @@ val_transform = A.Compose([
 ])
 
  
-dataset = ItemClassifi("./Items")
+dataset = ItemClassifi("./add_dataset")
 data_len = len(dataset)
 print(data_len)
 train_len = int(data_len * 0.9)
@@ -58,11 +58,6 @@ valloader = torch.utils.data.DataLoader(valset, batch_size=16, shuffle=False)
 # testloader = torch.utils.data.DataLoader(testset, batch_size=32, shuffle=False)
 
 
-# Resnest
-# torch.hub.list('zhanghang1989/ResNeSt', force_reload=True)
-# resnest = torch.hub.load('zhanghang1989/ResNeSt', 'resnest50', pretrained=True) 
-# resnest = resnest50(pretrained=True)
-
 # Model preparation
 model = inception_v3(pretrained=True)
 # model = torchvision.models.mobilenet_v2(pretrained=True)
@@ -75,10 +70,10 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # check point
-# checkpoint = torch.load('./pth/ResNet/epoch_150_checkpoint.pth')
-# model.load_state_dict(checkpoint['model_state_dict'])
-# optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-# print("Weight loaded from 150 epoch")
+checkpoint = torch.load('./pth/Inception3/epoch_120_checkpoint.pth')
+model.load_state_dict(checkpoint['model_state_dict'])
+optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+print("Weight loaded from 120 epoch")
 
 best_val_acc = 0.0
 train_losses = []
@@ -89,8 +84,8 @@ best_acc_ep = 0
 
 print("Start Learning....")
 print(f"Model Name : {model.__class__.__name__}")
-os.makedirs(f"./pth/{model.__class__.__name__}", exist_ok=True)
-with open(f"./pth/{model.__class__.__name__}/{model.__class__.__name__}_{epoch_start}_{epoch_end}.txt", 'w') as f:
+os.makedirs(f"./pth_added/{model.__class__.__name__}", exist_ok=True)
+with open(f"./pth_added/{model.__class__.__name__}/{model.__class__.__name__}_{epoch_start}_{epoch_end}.txt", 'w') as f:
    f.write("Epoch, Train_Loss, Val_Loss, Val_Acc")
 for epoch in range(epoch_start, epoch_end):  # loop over the dataset multiple times
     # Training
@@ -135,19 +130,19 @@ for epoch in range(epoch_start, epoch_end):  # loop over the dataset multiple ti
 
     # Save the model's state dictionary after a specific epoch
     if (epoch + 1) % 5 == 0:  # Define save_interval as desired
-        checkpoint_path = f'./pth/{model.__class__.__name__}/epoch_{epoch+1}_checkpoint.pth'
+        checkpoint_path = f'./pth_added/{model.__class__.__name__}/epoch_{epoch+1}_checkpoint.pth'
         torch.save({
             'epoch': epoch + 1,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'accuracy': val_acc
         }, checkpoint_path)
-        with open(f"./pth/{model.__class__.__name__}/{model.__class__.__name__}_{epoch_start}_{epoch_end}.txt", 'a') as f:
+        with open(f"./pth_added/{model.__class__.__name__}/{model.__class__.__name__}_{epoch_start}_{epoch_end}.txt", 'a') as f:
             f.write(f"{epoch+1}, {train_losses}, {val_loss}, {val_acc/16}")
 
  
 
 print(f'Accuracy on test images: {best_val_acc}%, in epoch : {best_acc_ep}')
-with open(f"./pth/{model.__class__.__name__}/{model.__class__.__name__}_{epoch_start}_{epoch_end}.txt", 'a') as f:
+with open(f"./pth_added/{model.__class__.__name__}/{model.__class__.__name__}_{epoch_start}_{epoch_end}.txt", 'a') as f:
     f.write(f'Accuracy on test images: {best_val_acc/16}%, in epoch : {best_acc_ep}')
 
