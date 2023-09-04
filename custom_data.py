@@ -16,11 +16,11 @@ class ItemClassifi(Dataset):
         self.data_list = []
         self.label_list = []
         self.transform = transforms
-        label_dict = {}
+        self.label_dict = {}
 
         for i, label_folder in enumerate(label_path):
             label_name = os.path.basename(label_folder)
-            label_dict[label_name] = i
+            self.label_dict[i] = label_name
             img_files = glob.glob(os.path.join(label_folder, "*.png"))
             img_files += glob.glob(os.path.join(label_folder, "*.[j][p]*[g]"))
             for file in img_files:
