@@ -28,7 +28,7 @@ transform = A.Compose([
 
 test_dataset = ItemClassifi("./add_dataset", transforms=transform)
 test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
-os.makedirs("./test_result", exist_ok=True)
+os.makedirs("./test_result_3", exist_ok=True)
 
 def test_model(pth_epochs):
     # Initialize model and optimizer here (make sure it matches the architecture used during training)
@@ -37,7 +37,7 @@ def test_model(pth_epochs):
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
     # Load checkpoint
-    checkpoint = torch.load(f'./pth\\Inception3\\epoch_{pth_epochs}_checkpoint.pth')
+    checkpoint = torch.load(f'./pth_added\\Inception3\\epoch_{pth_epochs}_checkpoint.pth')
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
@@ -58,14 +58,18 @@ def test_model(pth_epochs):
     d = test_dataset.label_dict
     print(d)
 
-    result_path =f"./test_result\\epoch{pth_epochs}\\test_result_added_{pth_epochs}.txt"
-    pred_path = f"./test_result\\epoch{pth_epochs}\\predicted.txt"
+    result_path =f"./test_result_3\\epoch{pth_epochs}\\test_result_added_{pth_epochs}.txt"
+    pred_path = f"./test_result_3\\epoch{pth_epochs}\\predicted.txt"
 
-    os.makedirs(f"./test_result\\epoch{pth_epochs}", exist_ok=True)
+    os.makedirs(f"./test_result_3\\epoch{pth_epochs}", exist_ok=True)
     with open(result_path, 'w') as f:
         f.write("Predict, answer \n")
     with open(pred_path, 'w') as f:
         f.write("Predicted Vector")
+    with open(result_path+"_correct", 'w') as f:
+        f.write("Predict, answer \n")
+    with open(result_path+"_wrong", 'w') as f:
+        f.write("Predict, answer \n")
 
     with torch.no_grad():
         for batch_i, set in enumerate(test_loader):
@@ -79,10 +83,7 @@ def test_model(pth_epochs):
             correct += (predicted == labels).sum().item()
             with open(pred_path, 'a') as f:
                 f.write(f"{outputs.data}, {predicted}")
-            with open(result_path+"_correct", 'w') as f:
-                f.write("Predict, answer \n")
-            with open(result_path+"_wrong", 'w') as f:
-                f.write("Predict, answer \n")
+        
             for i in range(predicted.size(dim=0)):
                 idx = batch_i * 16 + i
 
@@ -90,10 +91,10 @@ def test_model(pth_epochs):
                 with open(result_path, 'a') as f:
                     f.write(f"[{idx}] predicted : {d[predicted[i].item()]}, answer: {d[labels[i].item()]}\n")
                 if d[predicted[i].item()] == d[labels[i].item()]:
-                    with open(result_path+"_correct", 'a') as f:
+                    with open(result_path[:-4]+"_correct.txt", 'a') as f:
                         f.write(f"[{idx}] predicted : {d[predicted[i].item()]}, answer: {d[labels[i].item()]}\n")
                 else:
-                    with open(result_path+"_wrong", 'a') as f:
+                    with open(result_path[:-4]+"_wrong.txt", 'a') as f:
                         f.write(f"[{idx}] predicted : {d[predicted[i].item()]}, answer: {d[labels[i].item()]}\n")
 
 
@@ -104,5 +105,5 @@ def test_model(pth_epochs):
     print(correct, total)
 
 
-for i in range(1, 41):
+for i in range(1, 13):
     test_model(i*5)

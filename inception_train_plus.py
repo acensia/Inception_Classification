@@ -90,7 +90,6 @@ with open(f"./pth_added/{model.__class__.__name__}/{model.__class__.__name__}_{e
 for epoch in range(epoch_start, epoch_end):  # loop over the dataset multiple times
     # Training
     model.train()
-    running_loss = 0.0
     start_time = time.time()
     for i, data_box in enumerate(trainloader):
         data, target = data_box[0].to(device), data_box[1].to(device)
@@ -102,7 +101,6 @@ for epoch in range(epoch_start, epoch_end):  # loop over the dataset multiple ti
         loss = loss1 + 0.4 * loss2  # As per the paper regarding Inception architecture
         loss.backward()
         optimizer.step()
-
     train_losses.append(loss.item())
     print(f"Epoch {epoch + 1}, Training Loss: {loss.item()}")
 
@@ -117,9 +115,9 @@ for epoch in range(epoch_start, epoch_end):  # loop over the dataset multiple ti
             val_loss += criterion(outputs, target).item()
             pred = outputs.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
-    val_loss /= len(valloader)
+    val_loss /= len(valset)
     val_losses.append(val_loss)
-    curr_val_acc= 100*correct/len(valloader)
+    curr_val_acc= 100*correct/len(valset)
     val_acc.append(curr_val_acc)
     if best_val_acc < curr_val_acc:
         best_val_acc = curr_val_acc
@@ -138,11 +136,14 @@ for epoch in range(epoch_start, epoch_end):  # loop over the dataset multiple ti
             'accuracy': val_acc
         }, checkpoint_path)
         with open(f"./pth_added/{model.__class__.__name__}/{model.__class__.__name__}_{epoch_start}_{epoch_end}.txt", 'a') as f:
-            f.write(f"{epoch+1}, {train_losses}, {val_loss}, {val_acc/16}")
+            f.write(f"{epoch+1}, {train_losses}, {val_losses}, {val_acc}")
+            train_losses = []
+            val_losses = []
+            val_acc = []
 
  
 
 print(f'Accuracy on test images: {best_val_acc}%, in epoch : {best_acc_ep}')
 with open(f"./pth_added/{model.__class__.__name__}/{model.__class__.__name__}_{epoch_start}_{epoch_end}.txt", 'a') as f:
-    f.write(f'Accuracy on test images: {best_val_acc/16}%, in epoch : {best_acc_ep}')
+    f.write(f'Accuracy on test images: {best_val_acc}%, in epoch : {best_acc_ep}')
 
